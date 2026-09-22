@@ -32,7 +32,7 @@ SHAPE_TEMPLATES = [
 
 def draw_square(x,y,size, fill_color, stroke_color, corner_weight):
 
-class Board:
+class Board:x   
     def __init__(self, size, cell_size, origin_x, origin_y):
         self.size = size
         self.cell_size = cell_size
