@@ -1,3 +1,5 @@
+import random
+
 GRID_SIZE = 8
 CELL_SIZE = 48
 BOARD_X = 58
@@ -28,7 +30,11 @@ SHAPE_TEMPLATES = [
 ]
 
 def draw_square(x,y,size, fill_color, stroke_color, corner_weight):
-    
+    fill(fill_color[0], fill_color[1], fill_color[2])
+    stroke(stroke_color[0], stroke_color[1], stroke_color[2])
+    strokeWeight(1)
+    rect(x, y, size, size, corner_weight)
+
 class Board:x
     fill(fill_color[0], fill_color[1], fill_color[2])
     stroke(stroke_color[0], stroke_color[1], stroke_color[2])
@@ -43,7 +49,7 @@ class Particle:
         self.vy = random.uniform(-5, 5)
         self.size = random.uniform(6, 12)
         self.color_rgb = color_rgb
-        self.life = 255  # ค่าความโปร่งแสง (Alpha)
+        self.life = 255
 
     def update(self):
         self.x += self.vx
@@ -119,7 +125,6 @@ class Board:
         rows_to_clear = []
         cols_to_clear = []
 
-        # Check full rows
         r = 0
         while r < self.size:
             full = True
@@ -176,7 +181,6 @@ class Board:
                 cell_x = self.ox + cc * self.cell_size
                 cell_y = self.oy + cr * self.cell_size
                 
-                # สุ่มสร้างละอองเอฟเฟ็ค 8 ชิ้นต่อ 1 ช่อง
                 p_count = 0
                 while p_count < 8:
                     px = cell_x + self.cell_size / 2.0
