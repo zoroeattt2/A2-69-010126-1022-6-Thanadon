@@ -418,21 +418,126 @@ def keyPressed():
         load_game()
 
 def setup():
-    global board, score, game_over
+    global board, score, streak, game_over, particles, status_notice, status_timer
+    size(500, 600)
+    board = Board(GRID_SIZE, CELL_SIZE, BOARD_X, BOARD_Y)
+    score = 0
+    streak = 0
+    status_notice = ""
+    status_timer = 0
+    game_over = False
+    particles = []
+    spawn_hand()
 
 def draw():
-    if selected_piece != None:
+    global status_timer
+    background(240, 242, 245)
+    
+    fill(40)
+    textSize(20)
+    textAlign(LEFT, TOP)
+    text("SCORE: " + str(score) + "   STREAK: " + str(streak), BOARD_X, 18)
+    
+    textSize(12)
+    fill(100)
+    text("[S] Save  |  [L] Load", BOARD_X, 42)
+    
+    board.draw()
+
+    if selected_piece is not None:
+        target_c = int(round((selected_piece.x - board.ox) / float(board.cell_size)))
+        target_r = int(round((selected_piece.y - board.oy) / float(board.cell_size)))
+        board.draw_ghost(selected_piece, target_r, target_c)
+    
+    p_idx = 0
+    while p_idx < len(particles):
+        p = particles[p_idx]
+        p.update()
+        p.draw()
+        if p.is_dead():
+            particles.pop(p_idx)
+        else:
+            p_idx += 1
+    
+    i = 0
+    while i < len(hand):
+        if hand[i] != 0 and hand[i] is not None and hand[i] != selected_piece:
+            hand[i].draw()
+        i += 1
+        
+    if selected_piece is not None:
+        selected_piece.draw()
+
+    if status_timer > 0:
+        fill(30, 130, 60)
+        textSize(14)
+        textAlign(RIGHT, TOP)
+        text(status_notice, width - BOARD_X, 42)
+        status_timer -= 1
+        
     if game_over:
+        fill(0, 0, 0, 180)
+        rect(0, 0, width, height)
+        fill(255)
+        textSize(36)
+        textAlign(CENTER, CENTER)
+        text("GAME OVER", width / 2, height / 2 - 20)
+        textSize(20)
+        text("Final Score: " + str(score), width / 2, height / 2 + 30)
 
 def mousePressed():
-    global selected_piece, selected_index, game_over
+    global selected_piece, selected_index
+    if game_over:
+        return
+        
+    i = 0
+    while i < len(hand):
+        if hand[i] != 0 and hand[i] is not None:
+            if hand[i].contains_point(mouseX, mouseY):
+                selected_piece = hand[i]
+                selected_index = i
+                selected_piece.is_dragging = True
+                selected_piece.drag_offset_x = mouseX - selected_piece.x
+                selected_piece.drag_offset_y = mouseY - selected_piece.y
+                break
+        i += 1
 
 def mouseDragged():
+    if selected_piece is not None:
+    selected_piece.x = mouseX - selected_piece.drag_offset_x
+    selected_piece.y = mouseY - selected_piece.drag_offset_y
 
 def mouseReleased():
-    global selected_piece, selected_index, score, game_over
-    if selected_piece == None:
+    global selected_piece, selected_index, score, streak, game_over
+    if selected_piece is None:
+        return
+        
+    target_c = int(round((selected_piece.x - board.ox) / float(board.cell_size)))
+    target_r = int(round((selected_piece.y - board.oy) / float(board.cell_size)))
+    
     if board.can_place(selected_piece, target_r, target_c):
+        board.place(selected_piece, target_r, target_c)
+        score += len(selected_piece.blocks)
+        
+        lines_cleared = board.clear_lines()
+        if lines_cleared > 0:
+            streak += 1
+            score += (lines_cleared * 10) + (streak * 50)
+        else:
+            streak = 0
+            
+        hand[selected_index] = 0
+        selected_piece = None
+        selected_index = -1
+        
+        if is_hand_empty():
+            spawn_hand()
+            
+        check_game_over()
+    else:
+        selected_piece.reset_pos()
+        selected_piece = None
+        selected_index = -1
 
     
     
