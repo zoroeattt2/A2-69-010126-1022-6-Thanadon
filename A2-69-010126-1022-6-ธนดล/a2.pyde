@@ -410,6 +410,12 @@ def load_game():
     except Exception as e:
         status_notice = "No Save Found!"
         status_timer = 60
+        
+def keyPressed():
+    if key == 's' or key == 'S':
+        save_game()
+    elif key == 'l' or key == 'L':
+        load_game()
 
 def setup():
     global board, score, game_over
