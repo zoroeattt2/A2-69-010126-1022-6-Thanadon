@@ -30,15 +30,6 @@ SHAPE_TEMPLATES = [
 ]
 
 def draw_square(x,y,size, fill_color, stroke_color, corner_weight):
-<<<<<<< HEAD
-=======
-    fill(fill_color[0], fill_color[1], fill_color[2])
-    stroke(stroke_color[0], stroke_color[1], stroke_color[2])
-    strokeWeight(1)
-    rect(x, y, size, size, corner_weight)
-
-class Board:x
->>>>>>> be1e7bda339981e5b09f885e052d5b4d1228a729
     fill(fill_color[0], fill_color[1], fill_color[2])
     stroke(stroke_color[0], stroke_color[1], stroke_color[2])
     strokeWeight(1)
