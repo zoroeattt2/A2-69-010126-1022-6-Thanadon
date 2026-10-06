@@ -461,7 +461,7 @@ def mouseReleased():
             streak += 1
             score += (lines_cleared * 10) + (streak * 50)
             status_notice = "Clear Line!"
-            status_timer = 180
+            status_timer = 120
         else:
             streak = 0
             
