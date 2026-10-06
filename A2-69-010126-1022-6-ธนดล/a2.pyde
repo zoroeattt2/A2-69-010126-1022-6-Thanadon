@@ -1,16 +1,17 @@
 import random
 
+# --- CONFIGURATION ---
 GRID_SIZE = 8
 CELL_SIZE = 48
 BOARD_X = 58
 BOARD_Y = 60
 
 PALETTE = [
-    (245, 93, 62),   # Orange-Red
-    (66, 133, 244),  # Blue
-    (52, 168, 83),   # Green
-    (251, 188, 5),   # Yellow
-    (171, 71, 188),  # Purple
+    (245, 93, 62),   # Orange-Red (1)
+    (66, 133, 244),  # Blue (2)
+    (52, 168, 83),   # Green (3)
+    (251, 188, 5),   # Yellow (4)
+    (171, 71, 188),  # Purple (5)
 ]
 
 SHAPE_TEMPLATES = [
@@ -29,35 +30,11 @@ SHAPE_TEMPLATES = [
     ([(0, 1), (1, 1), (1, 0)], 2),
 ]
 
-def draw_square(x,y,size, fill_color, stroke_color, corner_weight):
+def draw_square(x, y, size, fill_color, stroke_color, corner_weight):
     fill(fill_color[0], fill_color[1], fill_color[2])
     stroke(stroke_color[0], stroke_color[1], stroke_color[2])
     strokeWeight(1)
     rect(x, y, size, size, corner_weight)
-
-class Particle:
-    def __init__(self, x, y, color_rgb):
-        self.x = x
-        self.y = y
-        self.vx = random.uniform(-5, 5)
-        self.vy = random.uniform(-5, 5)
-        self.size = random.uniform(6, 12)
-        self.color_rgb = color_rgb
-        self.life = 255
-
-    def update(self):
-        self.x += self.vx
-        self.y += self.vy
-        self.size -= 0.3
-        self.life -= 12
-
-    def draw(self):
-        noStroke()
-        fill(self.color_rgb[0], self.color_rgb[1], self.color_rgb[2], max(0, self.life))
-        ellipse(self.x, self.y, max(0, self.size), max(0, self.size))
-
-    def is_dead(self):
-        return self.life <= 0 or self.size <= 0
 
 class Board:
     def __init__(self, size, cell_size, origin_x, origin_y):
@@ -72,7 +49,7 @@ class Board:
             row = []
             c = 0
             while c < self.size:
-                row.append(None)
+                row.append(0)
                 c += 1
             self.grid.append(row)
             r += 1
@@ -85,10 +62,10 @@ class Board:
                 x = self.ox + c * self.cell_size
                 y = self.oy + r * self.cell_size
                 val = self.grid[r][c]
-                if val is None:
+                if val == 0:
                     draw_square(x, y, self.cell_size, (220, 225, 230), (200, 205, 210), 4)
                 else:
-                    draw_square(x, y, self.cell_size, PALETTE[val], (255, 255, 255), 4)
+                    draw_square(x, y, self.cell_size, PALETTE[val - 1], (255, 255, 255), 4)
                 c += 1
             r += 1
 
@@ -117,7 +94,7 @@ class Board:
             c = target_c + dc
             if r < 0 or r >= self.size or c < 0 or c >= self.size:
                 return False
-            if self.grid[r][c] is not None:
+            if self.grid[r][c] != 0:
                 return False
             i += 1
         return True
@@ -128,79 +105,60 @@ class Board:
             dc, dr = piece.blocks[i]
             r = target_r + dr
             c = target_c + dc
-            self.grid[r][c] = piece.color_idx
+            self.grid[r][c] = piece.color_idx + 1
             i += 1
 
+    #Check if row is full (returns True if full, False if not full)
+    def is_row_full(self, r):
+        c = 0
+        while c < self.size:
+            if self.grid[r][c] == 0:
+                return False
+            c += 1
+        return True
+
+    #Check if column is full (returns True if full, False if not full)
+    def is_col_full(self, c):
+        r = 0
+        while r < self.size:
+            if self.grid[r][c] == 0:
+                return False
+            r += 1
+        return True
+
     def clear_lines(self):
-        global particles
         rows_to_clear = []
         cols_to_clear = []
 
         r = 0
         while r < self.size:
-            full = True
-            c = 0
-            while c < self.size:
-                if self.grid[r][c] is None:
-                    full = False
-                    break
-                c += 1
-            if full:
+            if self.is_row_full(r):
                 rows_to_clear.append(r)
             r += 1
 
         c = 0
         while c < self.size:
-            full = True
-            r = 0
-            while r < self.size:
-                if self.grid[r][c] is None:
-                    full = False
-                    break
-                r += 1
-            if full:
+            if self.is_col_full(c):
                 cols_to_clear.append(c)
             c += 1
 
-        cells_to_clear = []
-        i = 0
-        while i < len(rows_to_clear):
-            r_idx = rows_to_clear[i]
+        r_idx = 0
+        while r_idx < len(rows_to_clear):
+            target_r = rows_to_clear[r_idx]
             c = 0
             while c < self.size:
-                if (r_idx, c) not in cells_to_clear:
-                    cells_to_clear.append((r_idx, c))
+                self.grid[target_r][c] = 0
                 c += 1
-            i += 1
+            r_idx += 1
 
-        i = 0
-        while i < len(cols_to_clear):
-            c_idx = cols_to_clear[i]
+        c_idx = 0
+        while c_idx < len(cols_to_clear):
+            target_c = cols_to_clear[c_idx]
             r = 0
             while r < self.size:
-                if (r, c_idx) not in cells_to_clear:
-                    cells_to_clear.append((r, c_idx))
+                self.grid[r][target_c] = 0
                 r += 1
-            i += 1
-
-        i = 0
-        while i < len(cells_to_clear):
-            cr, cc = cells_to_clear[i]
-            val = self.grid[cr][cc]
-            if val is not None:
-                col_rgb = PALETTE[val]
-                cell_x = self.ox + cc * self.cell_size
-                cell_y = self.oy + cr * self.cell_size
-                
-                p_count = 0
-                while p_count < 8:
-                    px = cell_x + self.cell_size / 2.0
-                    py = cell_y + self.cell_size / 2.0
-                    particles.append(Particle(px, py, col_rgb))
-                    p_count += 1
-                    
-                self.grid[cr][cc] = None
-            i += 1
+            c_idx += 1
 
         return len(rows_to_clear) + len(cols_to_clear)
 
@@ -249,7 +207,6 @@ class Piece:
 
 board = None
 hand = [0, 0, 0]
-particles = []
 score = 0
 streak = 0
 status_notice = ""
@@ -401,7 +358,7 @@ def load_game():
     except Exception as e:
         status_notice = "No Save Found!"
         status_timer = 60
-        
+
 def keyPressed():
     if key == 's' or key == 'S':
         save_game()
@@ -409,7 +366,7 @@ def keyPressed():
         load_game()
 
 def setup():
-    global board, score, streak, game_over, particles, status_notice, status_timer
+    global board, score, streak, game_over, status_notice, status_timer
     size(500, 600)
     board = Board(GRID_SIZE, CELL_SIZE, BOARD_X, BOARD_Y)
     score = 0
@@ -417,7 +374,6 @@ def setup():
     status_notice = ""
     status_timer = 0
     game_over = False
-    particles = []
     spawn_hand()
 
 def draw():
@@ -432,23 +388,12 @@ def draw():
     textSize(12)
     fill(100)
     text("[S] Save  |  [L] Load", BOARD_X, 42)
-    
     board.draw()
 
     if selected_piece is not None:
         target_c = int(round((selected_piece.x - board.ox) / float(board.cell_size)))
         target_r = int(round((selected_piece.y - board.oy) / float(board.cell_size)))
         board.draw_ghost(selected_piece, target_r, target_c)
-    
-    p_idx = 0
-    while p_idx < len(particles):
-        p = particles[p_idx]
-        p.update()
-        p.draw()
-        if p.is_dead():
-            particles.pop(p_idx)
-        else:
-            p_idx += 1
     
     i = 0
     while i < len(hand):
@@ -495,11 +440,11 @@ def mousePressed():
 
 def mouseDragged():
     if selected_piece is not None:
-    selected_piece.x = mouseX - selected_piece.drag_offset_x
-    selected_piece.y = mouseY - selected_piece.drag_offset_y
+        selected_piece.x = mouseX - selected_piece.drag_offset_x
+        selected_piece.y = mouseY - selected_piece.drag_offset_y
 
 def mouseReleased():
-    global selected_piece, selected_index, score, streak, game_over
+    global selected_piece, selected_index, score, streak, game_over, status_notice, status_timer
     if selected_piece is None:
         return
         
@@ -508,12 +453,15 @@ def mouseReleased():
     
     if board.can_place(selected_piece, target_r, target_c):
         board.place(selected_piece, target_r, target_c)
-        score += len(selected_piece.blocks)
+        
+        score += len(selected_piece.blocks) * 10
         
         lines_cleared = board.clear_lines()
         if lines_cleared > 0:
             streak += 1
             score += (lines_cleared * 10) + (streak * 50)
+            status_notice = "Clear Line!"
+            status_timer = 180
         else:
             streak = 0
             
@@ -529,6 +477,3 @@ def mouseReleased():
         selected_piece.reset_pos()
         selected_piece = None
         selected_index = -1
-
-    
-    
