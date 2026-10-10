@@ -1,6 +1,6 @@
 import random
 
-# --- CONFIGURATION ---
+#CONFIGURATION
 GRID_SIZE = 8
 CELL_SIZE = 48
 BOARD_X = 58
@@ -108,7 +108,6 @@ class Board:
             self.grid[r][c] = piece.color_idx + 1
             i += 1
 
-    #Check if row is full (returns True if full, False if not full)
     def is_row_full(self, r):
         c = 0
         while c < self.size:
@@ -117,7 +116,6 @@ class Board:
             c += 1
         return True
 
-    #Check if column is full (returns True if full, False if not full)
     def is_col_full(self, c):
         r = 0
         while r < self.size:
@@ -376,10 +374,8 @@ def setup():
     game_over = False
     spawn_hand()
 
-def draw():
+def draw_ui():
     global status_timer
-    background(240, 242, 245)
-    
     fill(40)
     textSize(20)
     textAlign(LEFT, TOP)
@@ -388,13 +384,15 @@ def draw():
     textSize(12)
     fill(100)
     text("[S] Save  |  [L] Load", BOARD_X, 42)
-    board.draw()
 
-    if selected_piece is not None:
-        target_c = int(round((selected_piece.x - board.ox) / float(board.cell_size)))
-        target_r = int(round((selected_piece.y - board.oy) / float(board.cell_size)))
-        board.draw_ghost(selected_piece, target_r, target_c)
-    
+    if status_timer > 0:
+        fill(30, 130, 60)
+        textSize(14)
+        textAlign(RIGHT, TOP)
+        text(status_notice, width - BOARD_X, 42)
+        status_timer -= 1
+
+def draw_hand():
     i = 0
     while i < len(hand):
         if hand[i] != 0 and hand[i] is not None and hand[i] != selected_piece:
@@ -404,22 +402,31 @@ def draw():
     if selected_piece is not None:
         selected_piece.draw()
 
-    if status_timer > 0:
-        fill(30, 130, 60)
-        textSize(14)
-        textAlign(RIGHT, TOP)
-        text(status_notice, width - BOARD_X, 42)
-        status_timer -= 1
+def draw_game_over():
+    fill(0, 0, 0, 180)
+    rect(0, 0, width, height)
+    fill(255)
+    textSize(36)
+    textAlign(CENTER, CENTER)
+    text("GAME OVER", width / 2, height / 2 - 20)
+    textSize(20)
+    text("Final Score: " + str(score), width / 2, height / 2 + 30)
+
+def draw():
+    background(240, 242, 245)
+    
+    draw_ui()
+    board.draw()
+
+    if selected_piece is not None:
+        target_c = int(round((selected_piece.x - board.ox) / float(board.cell_size)))
+        target_r = int(round((selected_piece.y - board.oy) / float(board.cell_size)))
+        board.draw_ghost(selected_piece, target_r, target_c)
+    
+    draw_hand()
         
     if game_over:
-        fill(0, 0, 0, 180)
-        rect(0, 0, width, height)
-        fill(255)
-        textSize(36)
-        textAlign(CENTER, CENTER)
-        text("GAME OVER", width / 2, height / 2 - 20)
-        textSize(20)
-        text("Final Score: " + str(score), width / 2, height / 2 + 30)
+        draw_game_over()
 
 def mousePressed():
     global selected_piece, selected_index
@@ -461,7 +468,7 @@ def mouseReleased():
             streak += 1
             score += (lines_cleared * 10) + (streak * 50)
             status_notice = "Clear Line!"
-            status_timer = 120
+            status_timer = 60
         else:
             streak = 0
             
